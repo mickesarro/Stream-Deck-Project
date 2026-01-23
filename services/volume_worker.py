@@ -9,7 +9,6 @@ import asyncio
 import os
 import sys
 
-
 from services.spotify_info import get_spotify_info
 
 # Global storage for the app
@@ -35,37 +34,57 @@ def get_focused_process_name():
 
 
 def volume_worker():
-    # FIX: Initialize for multi-threaded COM
     pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
-    global cached_volumes, spotify_cache
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    global cached_volumes
+
+    active_sessions = []
+    last_session_refresh = 0
 
     while True:
         try:
-            # 1. Volume Logic
-            current_app = get_focused_process_name()
-            display_vols = {"Focused": {"name": current_app, "level": 0, "icon": "terminal.png"}}
-            for app_name in ICON_MAP:
-                display_vols[app_name] = {"name": app_name, "level": 0, "icon": ICON_MAP[app_name]}
+            now = time.time()
 
-            sessions = AudioUtilities.GetAllSessions()
-            for session in sessions:
-                if session.Process:
-                    try:
-                        proc_name = session.Process.name().split('.')[0].capitalize()
-                        level = int(session.SimpleAudioVolume.GetMasterVolume() * 100)
-                        if proc_name == current_app:
-                            display_vols["Focused"]["level"] = level
-                        if proc_name in display_vols:
-                            display_vols[proc_name]["level"] = level
-                    except Exception as e:
-                        print(f"Volumes update error{e}")
-            cached_volumes = display_vols
+            # Only scan for new apps every 2 seconds
+            if now - last_session_refresh > 2.0:
+                new_sessions = []
+                for s in AudioUtilities.GetAllSessions():
+                    if s.Process:
+                        try:
+                            # Cache the name for better performance
+                            s._cached_name = s.Process.name().split('.')[0].capitalize()
+                            new_sessions.append(s)
+                        except:
+                            continue
+                active_sessions = new_sessions
+                last_session_refresh = now
+
+            # Get focused app
+            current_app = get_focused_process_name()
+
+            # Build the dict with the new info
+            vols = {"Focused": {"name": current_app, "level": 0, "icon": "terminal.png"}}
+            for app_name in ICON_MAP:
+                vols[app_name] = {"name": app_name, "level": 0, "icon": ICON_MAP[app_name]}
+
+            # Update volume from cached list
+            for session in active_sessions:
+                try:
+                    level = int(session.SimpleAudioVolume.GetMasterVolume() * 100)
+                    proc_name = session._cached_name
+
+                    if proc_name == current_app:
+                        vols["Focused"]["level"] = level
+                    if proc_name in vols:
+                        vols[proc_name]["level"] = level
+                except Exception:
+                    continue
+
+            cached_volumes = vols
 
         except Exception as e:
             print(f"Worker Error: {e}")
 
+        # Update frequently when there's new volume data
         time.sleep(0.1)
 
 
@@ -73,17 +92,19 @@ def spotify_worker():
     pythoncom.CoInitializeEx(pythoncom.COINIT_MULTITHREADED)
     global spotify_cache
     loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     while True:
         try:
             data = loop.run_until_complete(get_spotify_info())
             if data:
                 spotify_cache = data
-                # print(spotify_cache.get("progress"))
+                is_playing = data.get("is_playing", False)
+                wait_time = 1.0 if is_playing else 5.0
         except Exception as e:
             print(f"Spotify Update Error: {e}")
 
-        time.sleep(0.5)
+        time.sleep(wait_time)
 
 
 def get_resource_path(relative_path):

@@ -18,8 +18,7 @@ from blueprints.spotify import spotify_bp
 from blueprints.discord import discord_bp
 from blueprints.audio_output import audio_output_bp
 
-
-# Flask Setup
+# Setup dotenv for credentials
 load_dotenv()
 
 app = Flask(__name__)
