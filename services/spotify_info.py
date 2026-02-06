@@ -5,7 +5,7 @@ import datetime
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 from winsdk.windows.storage.streams import Buffer, InputStreamOptions, DataReader
 
-from services import volume_worker
+from services import audio_manager
 
 # Global to track if the song actually changed
 last_title = ""
@@ -52,7 +52,7 @@ async def get_spotify_info():
                     byte_data = bytearray(buffer.length)
                     reader.read_bytes(byte_data)
 
-                    folder_path = volume_worker.get_resource_path("static/now_playing")
+                    folder_path = audio_manager.get_resource_path("static/now_playing")
                     if not os.path.exists(folder_path): os.makedirs(folder_path)
                     file_path = os.path.join(folder_path, "cover.jpg")
                     with open(file_path, "wb") as f:

@@ -3,7 +3,7 @@ import subprocess
 import psutil
 from ppadb.client import Client as AdbClient
 
-from services.volume_worker import get_resource_path
+from services.audio_manager import get_resource_path
 
 client = AdbClient(host="127.0.0.1", port=5037)
 
@@ -29,15 +29,11 @@ def reset_chrome(target_url):
 
     device = devices[0]
 
-    # 1. Clear Chrome data (optional, but keeps it fresh)
+    # Clear Chrome data
     device.shell("pm clear com.android.chrome")
     time.sleep(1)
-
-    # 2. FORCE FULLSCREEN SYSTEM-WIDE (Hides status bar)
-    # This works on most Android 4.3+ devices
     device.shell("settings put global policy_control immersive.full=com.android.chrome")
 
-    # 3. Launch chrome
     launch_cmd = f"am start -n com.android.chrome/com.google.android.apps.chrome.Main -d {target_url}"
     device.shell(launch_cmd)
 

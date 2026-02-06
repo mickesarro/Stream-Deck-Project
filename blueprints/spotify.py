@@ -1,12 +1,12 @@
 from flask import Blueprint, jsonify, render_template_string
-from services import volume_worker
+from services import audio_manager
 
 spotify_bp = Blueprint('spotify', __name__)
 
 
 @spotify_bp.route('/get_spotify_data')
 def spotify_api():
-    return jsonify(volume_worker.spotify_cache)
+    return jsonify(audio_manager.spotify_cache)
 
 
 @spotify_bp.route('/spotify')

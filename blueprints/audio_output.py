@@ -1,21 +1,19 @@
 from flask import Blueprint, jsonify, render_template_string
-from services import volume_worker
+from services import audio_manager
 
 audio_output_bp = Blueprint('output', __name__)
 
 
 @audio_output_bp.route('/set_output/<device_id>')
 def set_output(device_id):
-    # Directly call the function with the ID (JBL or HyperX)
-    result = volume_worker.set_audio_playback_device(device_id)
+
+    result = audio_manager.set_audio_playback_device(device_id)
 
     if result == "Success":
         return jsonify({"status": "Success"})
     else:
         return jsonify({"status": "Failed"}), 500
 
-
-# --- HTML PAGE ---
 
 @audio_output_bp.route('/output')
 def output():

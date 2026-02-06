@@ -1,11 +1,11 @@
 from flask import Blueprint, jsonify, render_template_string
-from services import volume_worker
+from services import audio_manager
 
 mixer_bp = Blueprint('mixer', __name__)
 
 @mixer_bp.route('/get_volumes_data')
 def volumes_api():
-    return jsonify(volume_worker.cached_volumes)
+    return jsonify(audio_manager.cached_volumes)
 
 @mixer_bp.route('/volumes')
 def volumes_page():
