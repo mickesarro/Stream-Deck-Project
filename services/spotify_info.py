@@ -9,12 +9,12 @@ from services import audio_manager
 
 # Global to track if the song actually changed
 last_title = ""
+TARGET_ID = "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"
 
 
 async def get_spotify_info():
     global last_title
     sessions = await MediaManager.request_async()
-    TARGET_ID = "Spotify.exe"
     all_sessions = sessions.get_sessions()
 
     for session in all_sessions:
@@ -73,7 +73,6 @@ async def get_spotify_info():
 
 async def control_spotify(command):
     sessions = await MediaManager.request_async()
-    TARGET_ID = "Spotify.exe"
     all_sessions = sessions.get_sessions()
 
     for session in all_sessions:
@@ -86,7 +85,7 @@ async def control_spotify(command):
                 await session.try_skip_previous_async()
             return True
 
-        return False
+    return False
 
 
 
