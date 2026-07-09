@@ -45,6 +45,18 @@ def homepage_restart():
         home = "input keyevent 3"
         device.shell(home)
         device.shell("am force-stop com.android.chrome")
+        #device.shell("pm clear com.android.chrome")
+
+def clear_chrome_cache():
+    devices = client.devices()
+    if len(devices) > 0:
+        device = devices[0]
+        device.shell("am force-stop com.android.chrome")
+        time.sleep(1)
+        device.shell("pm clear com.android.chrome")
+        time.sleep(1)
+        device.shell("settings put global policy_control immersive.full=com.android.chrome")
+
 
 
 def auto_tether():
