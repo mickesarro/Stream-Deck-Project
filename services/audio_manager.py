@@ -94,6 +94,8 @@ def spotify_worker():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
+    wait_time = 3.0
+
     while True:
         try:
             data = loop.run_until_complete(get_spotify_info())

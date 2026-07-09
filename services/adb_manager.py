@@ -55,30 +55,44 @@ def auto_tether():
         devices = client.devices()
         if len(devices) > 0:
             device = devices[0]
-            # Disable UI
-            #device.shell("su -c 'pm disable com.android.systemui'")
-            #launch_cmd = f"am start -n com.android.chrome/com.google.android.apps.chrome.Main -d {flags}"
 
-            interface_active = device.shell("ip addr show rndis0")
-            time.sleep(1)
-            # If already up, don't force it again
-            if "UP" in interface_active:
-                print("Interface already up, tethering active!")
-                time.sleep(2)
-                return True
+            # Check if tethering is already active
+            try:
+                interface_active = device.shell("ip addr show rndis0")
+                if "UP" in interface_active and "inet 192.168.42.129" in interface_active:
+                    print("Interface already up, tethering active!")
+                    return True
+            except Exception:
+                pass  # Device might be resetting, keep looping
 
             print(f"Found {device.serial}. Forcing USB tethering")
-            time.sleep(2)
 
-            device.shell("su -c 'setprop sys.usb.config rndis,adb'")
-            time.sleep(2)
+            # 1. Switch the mode
+            try:
+                device.shell("su -c 'setprop sys.usb.config rndis,adb'")
+            except Exception:
+                print("Connection lost while switching modes, waiting for re-connection...")
+
+            # 2. WAIT for the USB interface to reset (this is crucial!)
+            time.sleep(5)
+
+            # 3. Re-detect the device because the connection was killed
+            devices = client.devices()
+            if not devices:
+                print("Device disconnected during mode switch, waiting...")
+                continue
+
+            device = devices[0]
+
+            # 4. Run the rest of the commands
             device.shell("su -c 'service call connectivity 33 i32 1'")
             device.shell("su -c 'ifconfig rndis0 192.168.42.129 netmask 255.255.255.0 up'")
 
+            # 5. Verify
+            time.sleep(2)
             result = device.shell("ip addr show rndis0")
             if "inet 192.168.42.129" in result:
                 print("!!! TETHERING ACTIVE !!!")
-                time.sleep(2)
                 return True
 
         time.sleep(2)
