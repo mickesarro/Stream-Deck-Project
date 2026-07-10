@@ -20,7 +20,7 @@ def run_adb_server():
         time.sleep(2)
 
 
-def reset_chrome(target_url):
+def reset_chrome():
     run_adb_server()
     devices = client.devices()
     if not devices:
@@ -34,8 +34,24 @@ def reset_chrome(target_url):
     time.sleep(1)
     device.shell("settings put global policy_control immersive.full=com.android.chrome")
 
-    launch_cmd = f"am start -n com.android.chrome/com.google.android.apps.chrome.Main -d {target_url}"
-    device.shell(launch_cmd)
+def disable_system_ui():
+    devices = client.devices()
+    if len(devices) > 0:
+        device = devices[0]
+        # su -c is used because modifying system packages requires root
+        device.shell("su -c 'pm disable com.android.systemui'")
+        time.sleep(1)
+        print("Rebooting device for changes to take effect...")
+        device.shell("reboot")
+
+
+def enable_system_ui():
+    devices = client.devices()
+    if len(devices) > 0:
+        device = devices[0]
+        device.shell("su -c 'pm enable com.android.systemui'")
+        time.sleep(1)
+        device.shell("reboot")
 
 
 def homepage_restart():
@@ -46,16 +62,6 @@ def homepage_restart():
         device.shell(home)
         device.shell("am force-stop com.android.chrome")
 
-
-def clear_chrome_cache():
-    devices = client.devices()
-    if len(devices) > 0:
-        device = devices[0]
-        device.shell("am force-stop com.android.chrome")
-        time.sleep(1)
-        device.shell("pm clear com.android.chrome")
-        time.sleep(1)
-        device.shell("settings put global policy_control immersive.full=com.android.chrome")
 
 
 def back_button():

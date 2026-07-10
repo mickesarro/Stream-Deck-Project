@@ -50,10 +50,15 @@ def setup_tray():
         menu = Menu(
             MenuItem('Restart Homepage', lambda: adb_manager.homepage_restart()),
             Menu.SEPARATOR,
-            MenuItem('Clear Cache', lambda: adb_manager.clear_chrome_cache()),
+            MenuItem('Clear Cache', lambda: adb_manager.reset_chrome()),
+            Menu.SEPARATOR,
+            # Submenu for System UI
+            MenuItem('System UI', Menu(
+                MenuItem('Enable (Reboots Phone)', lambda: adb_manager.enable_system_ui()),
+                MenuItem('Disable (Reboots Phone)', lambda: adb_manager.disable_system_ui())
+            )),
             Menu.SEPARATOR,
             MenuItem('Menu', lambda: adb_manager.menu_button()),
-            Menu.SEPARATOR,
             MenuItem('Back', lambda x: adb_manager.back_button()),
             Menu.SEPARATOR,
             MenuItem('Quit Mixer App', quit_app)
