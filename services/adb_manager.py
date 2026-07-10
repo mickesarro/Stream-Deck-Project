@@ -65,6 +65,13 @@ def back_button():
         back = "input keyevent 4"
         device.shell(back)
 
+def menu_button():
+    devices = client.devices()
+    if len(devices) > 0:
+        device = devices[0]
+        menu = "input keyevent 82"
+        device.shell(menu)
+
 
 def auto_tether():
     run_adb_server()
@@ -82,20 +89,17 @@ def auto_tether():
                     print("Interface already up, tethering active!")
                     return True
             except Exception:
-                pass  # Device might be resetting, keep looping
+                pass
 
             print(f"Found {device.serial}. Forcing USB tethering")
 
-            # 1. Switch the mode
             try:
                 device.shell("su -c 'setprop sys.usb.config rndis,adb'")
             except Exception:
                 print("Connection lost while switching modes, waiting for re-connection...")
 
-            # 2. WAIT for the USB interface to reset (this is crucial!)
             time.sleep(5)
 
-            # 3. Re-detect the device because the connection was killed
             devices = client.devices()
             if not devices:
                 print("Device disconnected during mode switch, waiting...")
@@ -103,11 +107,9 @@ def auto_tether():
 
             device = devices[0]
 
-            # 4. Run the rest of the commands
             device.shell("su -c 'service call connectivity 33 i32 1'")
             device.shell("su -c 'ifconfig rndis0 192.168.42.129 netmask 255.255.255.0 up'")
 
-            # 5. Verify
             time.sleep(2)
             result = device.shell("ip addr show rndis0")
             if "inet 192.168.42.129" in result:

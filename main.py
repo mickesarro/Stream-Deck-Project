@@ -52,6 +52,8 @@ def setup_tray():
             Menu.SEPARATOR,
             MenuItem('Clear Cache', lambda: adb_manager.clear_chrome_cache()),
             Menu.SEPARATOR,
+            MenuItem('Menu', lambda: adb_manager.menu_button()),
+            Menu.SEPARATOR,
             MenuItem('Back', lambda x: adb_manager.back_button()),
             Menu.SEPARATOR,
             MenuItem('Quit Mixer App', quit_app)
